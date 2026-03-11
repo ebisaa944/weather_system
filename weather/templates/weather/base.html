@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Weather System{% endblock %}</title>
+    
+    {% load static %}
+    
+    <!-- Fonts - Load first for better performance -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- CSS - Load without compression first to avoid errors -->
+    <link rel="stylesheet" href="{% static 'weather/css/style.css' %}">
+    <link rel="stylesheet" href="{% static 'weather/css/themes.css' %}">
+    
+    <!-- Try to load with compression if available, but don't fail if not -->
+    {% if False %}{% load compress %}{% compress css %}{% endcompress %}{% endif %}
+    
+    {% block extra_css %}{% endblock %}
+    
+    <!-- Favicon - with fallback -->
+    <link rel="icon" type="image/x-icon" href="{% static 'weather/images/favicon.ico' %}">
+    <link rel="shortcut icon" href="{% static 'weather/images/favicon.ico' %}">
+    
+    <!-- Meta tags -->
+    <meta name="description" content="Advanced Weather System with real-time updates, forecasts, and alerts">
+    <meta name="keywords" content="weather, forecast, temperature, rain, snow, wind, air quality">
+    <meta name="author" content="Weather System">
+    
+    {% block extra_meta %}{% endblock %}
+    
+    <!-- Inline style for critical CSS in case static files fail -->
+    <style>
+        /* Critical inline styles as fallback */
+        body { 
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            margin: 0;
+            padding: 0;
+            transition: background-color 0.3s ease;
+        }
+        .navbar { 
+            background: rgba(255, 255, 255, 0.95);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .nav-logo {
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 1.5rem;
+            color: #667eea;
+        }
+        .nav-links a {
+            text-decoration: none;
+            color: #333;
+            margin: 0 1rem;
+        }
+        .footer {
+            background: #f8f9fa;
+            padding: 2rem 0;
+            margin-top: 3rem;
+        }
+        .footer-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+    </style>
+</head>
+<body data-theme="{% if user.is_authenticated and user.weather_settings.theme %}{{ user.weather_settings.theme }}{% else %}light{% endif %}">
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="{% url 'weather:home' %}" class="nav-logo">
+                <span class="logo-icon">🌤️</span>
+                <span class="logo-text">Weather<span class="logo-highlight">System</span></span>
+            </a>
+            
+            <div class="nav-menu" id="nav-menu">
+                <ul class="nav-links" style="list-style: none; display: flex; margin: 0; padding: 0;">
+                    <li><a href="{% url 'weather:home' %}" class="nav-link {% if request.resolver_match.url_name == 'home' %}active{% endif %}">Home</a></li>
+                    {% if user.is_authenticated %}
+                    <li><a href="{% url 'weather:dashboard' %}" class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">Dashboard</a></li>
+                    <li><a href="{% url 'weather:weather_map' %}" class="nav-link {% if request.resolver_match.url_name == 'weather_map' %}active{% endif %}">Weather Map</a></li>
+                    <li><a href="{% url 'weather:weather_alerts' %}" class="nav-link {% if request.resolver_match.url_name == 'weather_alerts' %}active{% endif %}">Alerts</a></li>
+                    {% endif %}
+                </ul>
+            </div>
+            
+            <div class="nav-actions" style="display: flex; align-items: center; gap: 1rem;">
+                <!-- Theme Toggle -->
+                <button class="theme-toggle" id="theme-toggle" aria-label="Toggle theme" style="background: none; border: none; cursor: pointer; font-size: 1.2rem;">
+                    <span class="theme-icon-light">🌙</span>
+                    <span class="theme-icon-dark" style="display: none;">☀️</span>
+                </button>
+                
+                <!-- User Menu -->
+                {% if user.is_authenticated %}
+                <div class="user-menu" style="position: relative;">
+                    <button class="user-menu-button" id="user-menu-button" style="background: none; border: none; cursor: pointer; display: flex; align-items: center; gap: 0.5rem;">
+                        <span class="user-avatar" style="width: 32px; height: 32px; background: #667eea; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white;">
+                            {{ user.username|first|upper }}
+                        </span>
+                        <span class="user-name">{{ user.username }}</span>
+                        <span class="dropdown-arrow">▼</span>
+                    </button>
+                    <div class="user-dropdown" id="user-dropdown" style="display: none; position: absolute; right: 0; background: white; border: 1px solid #ddd; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); min-width: 200px;">
+                        <a href="{% url 'weather:dashboard' %}" style="display: block; padding: 0.75rem 1rem; text-decoration: none; color: #333; border-bottom: 1px solid #eee;">Dashboard</a>
+                        <a href="{% url 'weather:favorite_cities' %}" style="display: block; padding: 0.75rem 1rem; text-decoration: none; color: #333; border-bottom: 1px solid #eee;">Favorite Cities</a>
+                        <a href="{% url 'weather:search_history' %}" style="display: block; padding: 0.75rem 1rem; text-decoration: none; color: #333; border-bottom: 1px solid #eee;">Search History</a>
+                        <a href="{% url 'weather:settings' %}" style="display: block; padding: 0.75rem 1rem; text-decoration: none; color: #333; border-bottom: 1px solid #eee;">Settings</a>
+                        <div style="height: 1px; background: #eee;"></div>
+                        <a href="{% url 'account_logout' %}" style="display: block; padding: 0.75rem 1rem; text-decoration: none; color: #dc3545;">Logout</a>
+                    </div>
+                </div>
+                {% else %}
+                <div class="auth-buttons" style="display: flex; gap: 0.5rem;">
+                    <a href="{% url 'account_login' %}" class="btn btn-outline" style="padding: 0.5rem 1rem; border: 1px solid #667eea; border-radius: 4px; text-decoration: none; color: #667eea;">Login</a>
+                    <a href="{% url 'account_signup' %}" class="btn btn-primary" style="padding: 0.5rem 1rem; background: #667eea; border-radius: 4px; text-decoration: none; color: white;">Sign Up</a>
+                </div>
+                {% endif %}
+                
+                <!-- Mobile Menu Toggle -->
+                <button class="mobile-menu-toggle" id="mobile-menu-toggle" aria-label="Toggle menu" style="display: none; background: none; border: none; cursor: pointer;">
+                    <span style="display: block; width: 25px; height: 3px; background: #333; margin: 5px 0;"></span>
+                    <span style="display: block; width: 25px; height: 3px; background: #333; margin: 5px 0;"></span>
+                    <span style="display: block; width: 25px; height: 3px; background: #333; margin: 5px 0;"></span>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Messages -->
+    {% if messages %}
+    <div class="messages-container" style="max-width: 1200px; margin: 1rem auto; padding: 0 2rem;">
+        {% for message in messages %}
+        <div class="message message-{{ message.tags }}" style="padding: 1rem; border-radius: 4px; margin-bottom: 0.5rem; {% if message.tags == 'success' %}background: #d4edda; color: #155724; border: 1px solid #c3e6cb;{% elif message.tags == 'error' %}background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb;{% elif message.tags == 'warning' %}background: #fff3cd; color: #856404; border: 1px solid #ffeeba;{% else %}background: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb;{% endif %}">
+            {{ message }}
+            <button class="message-close" onclick="this.parentElement.remove()" style="float: right; background: none; border: none; font-size: 1.5rem; cursor: pointer; color: inherit;">×</button>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Main Content -->
+    <main class="main-content" style="min-height: calc(100vh - 200px);">
+        {% block content %}
+        <div style="text-align: center; padding: 3rem;">
+            <h1>Welcome to Weather System</h1>
+            <p>Your weather application is working!</p>
+        </div>
+        {% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-container">
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 2rem;">
+                <div class="footer-section">
+                    <h4 style="margin-bottom: 1rem;">WeatherSystem</h4>
+                    <p style="color: #666; line-height: 1.6;">Advanced weather forecasting with real-time updates, historical data, and severe weather alerts.</p>
+                </div>
+                
+                <div class="footer-section">
+                    <h4 style="margin-bottom: 1rem;">Quick Links</h4>
+                    <ul style="list-style: none; padding: 0;">
+                        <li><a href="{% url 'weather:home' %}" style="color: #666; text-decoration: none; display: block; margin-bottom: 0.5rem;">Home</a></li>
+                        {% if user.is_authenticated %}
+                        <li><a href="{% url 'weather:dashboard' %}" style="color: #666; text-decoration: none; display: block; margin-bottom: 0.5rem;">Dashboard</a></li>
+                        <li><a href="{% url 'weather:weather_map' %}" style="color: #666; text-decoration: none; display: block; margin-bottom: 0.5rem;">Weather Map</a></li>
+                        <li><a href="{% url 'weather:weather_alerts' %}" style="color: #666; text-decoration: none; display: block; margin-bottom: 0.5rem;">Alerts</a></li>
+                        {% endif %}
+                    </ul>
+                </div>
+                
+                <div class="footer-section">
+                    <h4 style="margin-bottom: 1rem;">Resources</h4>
+                    <ul style="list-style: none; padding: 0;">
+                        <li><a href="/api/docs/" style="color: #666; text-decoration: none; display: block; margin-bottom: 0.5rem;">API Documentation</a></li>
+                        <li><a href="#" style="color: #666; text-decoration: none; display: block; margin-bottom: 0.5rem;">About Us</a></li>
+                        <li><a href="#" style="color: #666; text-decoration: none; display: block; margin-bottom: 0.5rem;">Contact</a></li>
+                    </ul>
+                </div>
+                
+                <div class="footer-section">
+                    <h4 style="margin-bottom: 1rem;">Weather Data</h4>
+                    <p style="color: #666;">Powered by multiple sources</p>
+                    <p class="copyright" style="color: #999; font-size: 0.9rem; margin-top: 1rem;">&copy; {% now "Y" %} WeatherSystem. All rights reserved.</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- JavaScript - Load without compression -->
+    <script src="{% static 'weather/js/main.js' %}"></script>
+    <script src="{% static 'weather/js/theme.js' %}"></script>
+    
+    {% block extra_js %}{% endblock %}
+    
+    <!-- Template-specific JS -->
+    {% block page_js %}{% endblock %}
+
+    <!-- Simple JavaScript for dropdown -->
+    <script>
+        // Simple dropdown toggle
+        document.addEventListener('DOMContentLoaded', function() {
+            const menuButton = document.getElementById('user-menu-button');
+            const dropdown = document.getElementById('user-dropdown');
+            
+            if (menuButton && dropdown) {
+                menuButton.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    dropdown.style.display = dropdown.style.display === 'none' ? 'block' : 'none';
+                });
+                
+                document.addEventListener('click', function(e) {
+                    if (!menuButton.contains(e.target) && !dropdown.contains(e.target)) {
+                        dropdown.style.display = 'none';
+                    }
+                });
+            }
+            
+            // Mobile menu toggle
+            const mobileToggle = document.getElementById('mobile-menu-toggle');
+            const navMenu = document.getElementById('nav-menu');
+            
+            if (mobileToggle && navMenu) {
+                mobileToggle.addEventListener('click', function() {
+                    if (navMenu.style.display === 'none' || navMenu.style.display === '') {
+                        navMenu.style.display = 'block';
+                    } else {
+                        navMenu.style.display = 'none';
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>

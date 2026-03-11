@@ -1,0 +1,45 @@
+{% extends "weather/base.html" %}
+
+{% block title %}Favorite Cities - Weather System{% endblock %}
+
+{% block content %}
+<section class="page">
+    <header class="page-header">
+        <h1>Favorite Cities</h1>
+        <p>Saved locations for quick access.</p>
+    </header>
+
+    <form method="post" class="card">
+        {% csrf_token %}
+        <div class="card-body">
+            <label class="field">
+                <span>Add a city</span>
+                <input type="text" name="city_name" placeholder="e.g. London">
+            </label>
+            <div class="actions">
+                <button type="submit" class="btn btn-primary">Add</button>
+            </div>
+        </div>
+    </form>
+
+    {% if favorites %}
+        <div class="card">
+            <div class="card-body">
+                <ul class="list">
+                    {% for fav in favorites %}
+                        <li>
+                            <span>{{ fav.city_name }}</span>
+                        </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    {% else %}
+        <div class="card">
+            <div class="card-body">
+                <p>No favorites yet.</p>
+            </div>
+        </div>
+    {% endif %}
+</section>
+{% endblock %}

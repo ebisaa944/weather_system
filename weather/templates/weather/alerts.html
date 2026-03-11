@@ -1,0 +1,551 @@
+{% extends "weather/base.html" %}
+{% load static %}
+
+{% block title %}Weather Alerts - Weather System{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Alert page specific styles */
+    .page {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 2rem;
+    }
+    
+    .page-header {
+        margin-bottom: 2rem;
+        text-align: center;
+    }
+    
+    .page-header h1 {
+        font-size: 2.5rem;
+        margin-bottom: 0.5rem;
+        color: #333;
+    }
+    
+    .page-header p {
+        color: #666;
+        font-size: 1.1rem;
+    }
+    
+    /* Alert filters */
+    .alert-filters {
+        display: flex;
+        gap: 1rem;
+        margin-bottom: 2rem;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+    
+    .filter-btn {
+        padding: 0.5rem 1.5rem;
+        border: 2px solid #e0e0e0;
+        border-radius: 30px;
+        background: white;
+        color: #666;
+        cursor: pointer;
+        font-weight: 500;
+        transition: all 0.3s ease;
+    }
+    
+    .filter-btn:hover {
+        border-color: #667eea;
+        color: #667eea;
+    }
+    
+    .filter-btn.active {
+        background: #667eea;
+        border-color: #667eea;
+        color: white;
+    }
+    
+    /* Alert stats */
+    .alert-stats {
+        display: flex;
+        gap: 1.5rem;
+        justify-content: center;
+        margin-bottom: 2rem;
+        flex-wrap: wrap;
+    }
+    
+    .stat-badge {
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-size: 0.9rem;
+        font-weight: 500;
+    }
+    
+    .stat-badge.extreme { background: #dc3545; color: white; }
+    .stat-badge.severe { background: #fd7e14; color: white; }
+    .stat-badge.moderate { background: #ffc107; color: #333; }
+    .stat-badge.minor { background: #17a2b8; color: white; }
+    
+    /* Alerts list */
+    .alerts-list {
+        display: grid;
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+    
+    /* Alert cards */
+    .alert-card {
+        background: white;
+        border-radius: 10px;
+        padding: 1.5rem;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        border-left: 6px solid;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .alert-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+    }
+    
+    /* Severity-based colors */
+    .alert-card.alert-extreme { border-left-color: #dc3545; }
+    .alert-card.alert-severe { border-left-color: #fd7e14; }
+    .alert-card.alert-moderate { border-left-color: #ffc107; }
+    .alert-card.alert-minor { border-left-color: #17a2b8; }
+    .alert-card.alert-info { border-left-color: #6c757d; }
+    
+    .alert-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 1rem;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+    
+    .alert-title {
+        font-size: 1.3rem;
+        margin: 0;
+        color: #333;
+    }
+    
+    .alert-severity {
+        padding: 0.25rem 1rem;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .severity-extreme { background: #dc3545; color: white; }
+    .severity-severe { background: #fd7e14; color: white; }
+    .severity-moderate { background: #ffc107; color: #333; }
+    .severity-minor { background: #17a2b8; color: white; }
+    .severity-info { background: #6c757d; color: white; }
+    
+    .alert-meta {
+        display: flex;
+        gap: 1.5rem;
+        margin-bottom: 1rem;
+        flex-wrap: wrap;
+        font-size: 0.9rem;
+        color: #666;
+    }
+    
+    .alert-meta-item {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .alert-meta-icon {
+        font-size: 1.1rem;
+    }
+    
+    .alert-description {
+        color: #444;
+        line-height: 1.6;
+        margin-bottom: 1rem;
+    }
+    
+    .alert-instruction {
+        background: #f8f9fa;
+        padding: 1rem;
+        border-radius: 5px;
+        margin-top: 1rem;
+        border-left: 3px solid #667eea;
+    }
+    
+    .alert-instruction strong {
+        color: #667eea;
+        display: block;
+        margin-bottom: 0.25rem;
+    }
+    
+    .alert-areas {
+        margin-top: 0.5rem;
+        font-size: 0.9rem;
+        color: #666;
+    }
+    
+    .alert-source {
+        display: inline-block;
+        padding: 0.2rem 0.5rem;
+        background: #f0f0f0;
+        border-radius: 3px;
+        font-size: 0.8rem;
+        color: #666;
+        margin-top: 0.5rem;
+    }
+    
+    /* Empty state */
+    .empty-state {
+        text-align: center;
+        padding: 4rem 2rem;
+        background: white;
+        border-radius: 10px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    
+    .empty-state-icon {
+        font-size: 4rem;
+        margin-bottom: 1rem;
+        opacity: 0.5;
+    }
+    
+    .empty-state h3 {
+        color: #333;
+        margin-bottom: 0.5rem;
+    }
+    
+    .empty-state p {
+        color: #666;
+        margin-bottom: 1.5rem;
+    }
+    
+    /* Loading state */
+    .loading-spinner {
+        width: 50px;
+        height: 50px;
+        border: 4px solid #f3f3f3;
+        border-top: 4px solid #667eea;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin: 2rem auto;
+    }
+    
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+    
+    /* Refresh button */
+    .refresh-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 1.5rem;
+        background: white;
+        border: 2px solid #667eea;
+        border-radius: 30px;
+        color: #667eea;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        margin-bottom: 2rem;
+    }
+    
+    .refresh-btn:hover {
+        background: #667eea;
+        color: white;
+    }
+    
+    .refresh-btn .spinner {
+        display: none;
+        width: 16px;
+        height: 16px;
+        border: 2px solid rgba(255,255,255,0.3);
+        border-top-color: white;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+    }
+    
+    .refresh-btn.loading .spinner {
+        display: inline-block;
+    }
+    
+    /* Responsive */
+    @media (max-width: 768px) {
+        .page { padding: 1rem; }
+        .page-header h1 { font-size: 2rem; }
+        .alert-header { flex-direction: column; }
+        .alert-meta { gap: 1rem; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="page">
+    <header class="page-header">
+        <h1>⚠️ Weather Alerts</h1>
+        <p>Active alerts prioritized by severity and start time. Stay informed and stay safe.</p>
+    </header>
+
+    <!-- Alert Statistics -->
+    {% if alerts %}
+    <div class="alert-stats">
+        <span class="stat-badge extreme">Extreme: {{ alerts|length|add:"0" }}</span>
+        <span class="stat-badge severe">Severe: {{ alerts|length|add:"0" }}</span>
+        <span class="stat-badge moderate">Moderate: {{ alerts|length|add:"0" }}</span>
+        <span class="stat-badge minor">Minor: {{ alerts|length|add:"0" }}</span>
+    </div>
+    {% endif %}
+
+    <!-- Filter Buttons -->
+    <div class="alert-filters">
+        <button class="filter-btn active" data-filter="all">All Alerts</button>
+        <button class="filter-btn" data-filter="extreme">Extreme</button>
+        <button class="filter-btn" data-filter="severe">Severe</button>
+        <button class="filter-btn" data-filter="moderate">Moderate</button>
+        <button class="filter-btn" data-filter="minor">Minor</button>
+    </div>
+
+    <!-- Refresh Button -->
+    <div style="text-align: center;">
+        <button class="refresh-btn" id="refreshAlerts">
+            <span>🔄</span>
+            Refresh Alerts
+            <span class="spinner"></span>
+        </button>
+    </div>
+
+    {% if alerts %}
+        <div class="alerts-list" id="alertsList">
+            {% for alert in alerts %}
+                <article class="alert-card alert-{{ alert.severity|default:'info' }}" 
+                         data-severity="{{ alert.severity|default:'info' }}"
+                         data-id="{{ alert.id|default:forloop.counter }}">
+                    
+                    <div class="alert-header">
+                        <h2 class="alert-title">{{ alert.title|default:"Weather Alert" }}</h2>
+                        <span class="alert-severity severity-{{ alert.severity|default:'info' }}">
+                            {{ alert.severity|upper|default:"INFO" }}
+                        </span>
+                    </div>
+                    
+                    <div class="alert-meta">
+                        <span class="alert-meta-item">
+                            <span class="alert-meta-icon">📅</span>
+                            {{ alert.start_time|default:"Start time unavailable" }}
+                        </span>
+                        <span class="alert-meta-item">
+                            <span class="alert-meta-icon">⏰</span>
+                            {{ alert.end_time|default:"End time unavailable" }}
+                        </span>
+                        {% if alert.areas %}
+                        <span class="alert-meta-item">
+                            <span class="alert-meta-icon">📍</span>
+                            {{ alert.areas }}
+                        </span>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="alert-description">
+                        {{ alert.description|default:"No description available."|linebreaks }}
+                    </div>
+                    
+                    {% if alert.instruction %}
+                    <div class="alert-instruction">
+                        <strong>📋 Recommended Action</strong>
+                        {{ alert.instruction }}
+                    </div>
+                    {% endif %}
+                    
+                    {% if alert.source %}
+                    <div class="alert-source">
+                        Source: {{ alert.source }}
+                    </div>
+                    {% endif %}
+                </article>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="empty-state">
+            <div class="empty-state-icon">🌤️</div>
+            <h3>No Active Alerts</h3>
+            <p>There are no weather alerts at this time. Check back later for updates.</p>
+            <button class="refresh-btn" id="refreshAlerts" style="margin-top: 1rem;">
+                <span>🔄</span>
+                Check for Updates
+            </button>
+        </div>
+    {% endif %}
+
+    <!-- Alert Subscription Section -->
+    <div style="margin-top: 3rem; text-align: center;">
+        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 2rem; border-radius: 10px;">
+            <h3 style="margin-bottom: 1rem;">🔔 Get Alert Notifications</h3>
+            <p style="margin-bottom: 1.5rem; opacity: 0.9;">Receive instant notifications for severe weather in your area.</p>
+            {% if user.is_authenticated %}
+                <button class="btn btn-primary" style="background: white; color: #667eea;" onclick="subscribeToAlerts()">
+                    Enable Notifications
+                </button>
+            {% else %}
+                <a href="{% url 'account_login' %}?next={% url 'weather:weather_alerts' %}" 
+                   class="btn btn-primary" style="background: white; color: #667eea;">
+                    Login to Subscribe
+                </a>
+            {% endif %}
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Filter functionality
+        const filterBtns = document.querySelectorAll('.filter-btn');
+        const alertsList = document.getElementById('alertsList');
+        
+        if (filterBtns.length && alertsList) {
+            filterBtns.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    // Update active button
+                    filterBtns.forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    
+                    const filter = this.dataset.filter;
+                    const alerts = document.querySelectorAll('.alert-card');
+                    
+                    alerts.forEach(alert => {
+                        if (filter === 'all' || alert.dataset.severity === filter) {
+                            alert.style.display = 'block';
+                        } else {
+                            alert.style.display = 'none';
+                        }
+                    });
+                    
+                    // Show/hide empty state message
+                    const visibleAlerts = document.querySelectorAll('.alert-card[style="display: block;"]').length;
+                    const emptyMessage = document.getElementById('no-alerts-message');
+                    
+                    if (visibleAlerts === 0) {
+                        if (!emptyMessage) {
+                            const msg = document.createElement('div');
+                            msg.id = 'no-alerts-message';
+                            msg.className = 'empty-state';
+                            msg.innerHTML = `
+                                <div class="empty-state-icon">🔍</div>
+                                <h3>No Alerts Found</h3>
+                                <p>No ${filter} severity alerts at this time.</p>
+                            `;
+                            alertsList.parentNode.insertBefore(msg, alertsList.nextSibling);
+                        }
+                    } else if (emptyMessage) {
+                        emptyMessage.remove();
+                    }
+                });
+            });
+        }
+        
+        // Refresh functionality
+        const refreshBtn = document.getElementById('refreshAlerts');
+        if (refreshBtn) {
+            refreshBtn.addEventListener('click', function() {
+                this.classList.add('loading');
+                this.disabled = true;
+                
+                // Simulate refresh (in production, this would fetch new data)
+                setTimeout(() => {
+                    location.reload();
+                }, 1500);
+            });
+        }
+        
+        // Auto-refresh every 5 minutes
+        setTimeout(() => {
+            if (confirm('New alerts may be available. Refresh now?')) {
+                location.reload();
+            }
+        }, 300000); // 5 minutes
+    });
+    
+    // Subscribe to alerts
+    function subscribeToAlerts() {
+        {% if user.is_authenticated %}
+            // Check if browser supports notifications
+            if ('Notification' in window) {
+                Notification.requestPermission().then(function(permission) {
+                    if (permission === 'granted') {
+                        alert('✅ Notifications enabled! You will receive alerts for severe weather.');
+                        
+                        // In production, this would save preference to database
+                        fetch('/api/v2/weather/alerts/subscribe/', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRFToken': getCookie('csrftoken')
+                            },
+                            body: JSON.stringify({
+                                'subscribe': true,
+                                'severity': ['severe', 'extreme']
+                            })
+                        });
+                    } else {
+                        alert('❌ Notification permission denied. You can enable them later in browser settings.');
+                    }
+                });
+            } else {
+                alert('Your browser does not support notifications.');
+            }
+        {% endif %}
+    }
+    
+    // Helper function to get CSRF token
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+    
+    // Display mock alert for demo (remove in production)
+    {% if debug and not alerts %}
+    setTimeout(() => {
+        if (confirm('No real alerts found. Would you like to see a demo alert?')) {
+            const alertsList = document.getElementById('alertsList');
+            if (alertsList) {
+                const demoAlert = document.createElement('article');
+                demoAlert.className = 'alert-card alert-moderate';
+                demoAlert.dataset.severity = 'moderate';
+                demoAlert.innerHTML = `
+                    <div class="alert-header">
+                        <h2 class="alert-title">Demo: Thunderstorm Watch</h2>
+                        <span class="alert-severity severity-moderate">MODERATE</span>
+                    </div>
+                    <div class="alert-meta">
+                        <span class="alert-meta-item">📅 Now - Tonight</span>
+                        <span class="alert-meta-item">📍 Demo Area</span>
+                    </div>
+                    <div class="alert-description">
+                        This is a demonstration alert. In production, real weather alerts would appear here.
+                    </div>
+                    <div class="alert-instruction">
+                        <strong>📋 Demo Instruction</strong>
+                        This is how real instructions would appear.
+                    </div>
+                `;
+                alertsList.appendChild(demoAlert);
+            }
+        }
+    }, 1000);
+    {% endif %}
+</script>
+{% endblock %}

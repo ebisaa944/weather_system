@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title }}</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        h1 {
+            color: #2c3e50;
+            border-bottom: 3px solid #3498db;
+            padding-bottom: 10px;
+        }
+        h2 {
+            color: #34495e;
+            margin-top: 30px;
+        }
+        .endpoint {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .method {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+        .get { background: #61affe; color: white; }
+        .url {
+            font-family: monospace;
+            font-size: 1.1em;
+            color: #2c3e50;
+        }
+        .params {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 4px;
+            margin-top: 15px;
+        }
+        .param {
+            margin-bottom: 10px;
+        }
+        .param-name {
+            font-weight: bold;
+            color: #e67e22;
+        }
+        .response {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 15px;
+            border-radius: 4px;
+            overflow-x: auto;
+            font-family: monospace;
+        }
+        footer {
+            margin-top: 50px;
+            text-align: center;
+            color: #7f8c8d;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+    <h1>🌤️ Weather API Documentation</h1>
+    <p>Base URL: <code>/api/v1/</code></p>
+    
+    <div class="endpoint">
+        <h2>Current Weather</h2>
+        <p><span class="method get">GET</span> <span class="url">/weather/current/</span></p>
+        <p>Get current weather conditions for a city.</p>
+        
+        <div class="params">
+            <h3>Parameters</h3>
+            <div class="param">
+                <span class="param-name">city</span> (required) - City name (e.g., London, Tokyo)
+            </div>
+            <div class="param">
+                <span class="param-name">lat</span> (optional) - Latitude for coordinate-based search
+            </div>
+            <div class="param">
+                <span class="param-name">lon</span> (optional) - Longitude for coordinate-based search
+            </div>
+        </div>
+        
+        <h3>Example Request</h3>
+        <pre class="response">GET /api/v1/weather/current/?city=London</pre>
+        
+        <h3>Example Response</h3>
+        <pre class="response">{
+    "success": true,
+    "data": {
+        "city": "London",
+        "country": "GB",
+        "temperature": {
+            "current": 15,
+            "feels_like": 14,
+            "min": 13,
+            "max": 17
+        },
+        "condition": {
+            "main": "Clouds",
+            "description": "Scattered clouds",
+            "icon": "03d"
+        }
+    }
+}</pre>
+    </div>
+    
+    <div class="endpoint">
+        <h2>Weather Forecast</h2>
+        <p><span class="method get">GET</span> <span class="url">/weather/forecast/</span></p>
+        <p>Get 5-day weather forecast for a city.</p>
+        
+        <div class="params">
+            <h3>Parameters</h3>
+            <div class="param">
+                <span class="param-name">city</span> (required) - City name
+            </div>
+            <div class="param">
+                <span class="param-name">days</span> (optional) - Number of days (1-7, default: 5)
+            </div>
+        </div>
+    </div>
+    
+    <div class="endpoint">
+        <h2>City Search</h2>
+        <p><span class="method get">GET</span> <span class="url">/weather/search/</span></p>
+        <p>Search for cities by name (autocomplete).</p>
+        
+        <div class="params">
+            <h3>Parameters</h3>
+            <div class="param">
+                <span class="param-name">q</span> (required) - Search query (minimum 2 characters)
+            </div>
+        </div>
+    </div>
+    
+    <div class="endpoint">
+        <h2>Air Quality</h2>
+        <p><span class="method get">GET</span> <span class="url">/weather/air-quality/</span></p>
+        <p>Get air quality data by coordinates.</p>
+        
+        <div class="params">
+            <h3>Parameters</h3>
+            <div class="param">
+                <span class="param-name">lat</span> (required) - Latitude
+            </div>
+            <div class="param">
+                <span class="param-name">lon</span> (required) - Longitude
+            </div>
+        </div>
+    </div>
+    
+    <footer>
+        <p>Weather data provided by OpenWeatherMap | API Version 1.0</p>
+    </footer>
+</body>
+</html>

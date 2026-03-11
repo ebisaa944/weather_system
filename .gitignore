@@ -1,0 +1,52 @@
+# Environment variables
+.env
+
+# Python cache files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Virtual environment
+venv/
+env/
+ENV/
+
+# Database
+*.sqlite3
+*.db
+
+# Logs
+logs/
+*.log
+
+# Static files (collected)
+staticfiles/
+
+# Media files (user uploads)
+media/
+
+# IDE settings
+.vscode/
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Python build and distribution
+build/
+dist/
+*.egg-info/
+
+# Test coverage
+.coverage
+htmlcov/
+.pytest_cache/
+
+# Local Django settings
+*.local.py
+
+# Sensitive project files (review before uncommenting)
+# .gitattributes
+# files.txt
