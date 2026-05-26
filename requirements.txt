@@ -35,4 +35,4 @@ django-compressor==4.4
 geopy==2.4.1
 
 # Async HTTP
-aiohttp==3.9.1
+aiohttp==3.13.4
