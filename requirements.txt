@@ -36,4 +36,3 @@ geopy==2.4.1
 
 # Async HTTP
 aiohttp==3.9.1
-asgiref==3.7.2
