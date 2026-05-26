@@ -78,7 +78,8 @@ INSTALLED_APPS = [
     'compressor',
 ]
 
-HAS_DRF_YASG = importlib.util.find_spec('drf_yasg') is not None
+ENABLE_SWAGGER = os.getenv('ENABLE_SWAGGER', 'False') == 'True'
+HAS_DRF_YASG = ENABLE_SWAGGER and importlib.util.find_spec('drf_yasg') is not None
 if HAS_DRF_YASG:
     INSTALLED_APPS.append('drf_yasg')
 
