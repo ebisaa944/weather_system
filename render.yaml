@@ -5,7 +5,7 @@ services:
     plan: starter
     buildCommand: bash build.sh
     preDeployCommand: python manage.py migrate --noinput
-    startCommand: gunicorn weather_system.wsgi:application --bind 0.0.0.0:$PORT --workers 3 --threads 2 --timeout 120
+    startCommand: bash start.sh
     healthCheckPath: /health/
     autoDeploy: true
     envVars:
@@ -13,6 +13,8 @@ services:
         value: 3.12.7
       - key: DEBUG
         value: "False"
+      - key: DJANGO_SETTINGS_MODULE
+        value: weather_system.settings
       - key: SECRET_KEY
         generateValue: true
       - key: ALLOWED_HOSTS
