@@ -14,7 +14,6 @@ django-redis==5.4.0
 # API & REST
 djangorestframework==3.14.0
 django-cors-headers==4.3.1
-drf-yasg==1.21.7
 
 # Forms
 django-crispy-forms==2.1
