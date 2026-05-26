@@ -1,49 +1,86 @@
 {% extends "weather/base.html" %}
+{% load static %}
 
 {% block title %}Search History - Weather System{% endblock %}
 
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'weather/css/dashboard.css' %}">
+{% endblock %}
+
 {% block content %}
-<section class="page">
-    <header class="page-header">
-        <h1>Search History</h1>
-        <p>Your recent lookups.</p>
+<section class="page page-wide">
+    <header class="history-hero">
+        <div>
+            <p class="page-kicker">Activity timeline</p>
+            <h1>Search History</h1>
+            <p>Review recent weather lookups, revisit locations quickly, and keep your planning flow moving on desktop and mobile.</p>
+        </div>
+        <div class="history-hero-stats" aria-label="History summary">
+            <article class="history-stat-card">
+                <span class="history-stat-value">{{ page_obj.paginator.count|default:"0" }}</span>
+                <span class="history-stat-label">Total Searches</span>
+            </article>
+            <article class="history-stat-card">
+                <span class="history-stat-value">{{ page_obj.number|default:"1" }}</span>
+                <span class="history-stat-label">Current Page</span>
+            </article>
+        </div>
     </header>
 
     {% if page_obj and page_obj.object_list %}
         <div class="card">
-            <div class="card-body">
-                <table class="table">
-                    <thead>
-                        <tr>
-                            <th>City</th>
-                            <th>When</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for item in page_obj.object_list %}
-                        <tr>
-                            <td>{{ item.city_name }}</td>
-                            <td>{{ item.created_at|default:item.timestamp }}</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+            <div class="card-body history-list">
+                {% for item in page_obj.object_list %}
+                <article class="history-entry">
+                    <div class="history-entry-main">
+                        <div class="history-entry-top">
+                            <h2 class="history-city">{{ item.city_name }}</h2>
+                            {% if item.country %}
+                            <span class="history-country">{{ item.country }}</span>
+                            {% endif %}
+                        </div>
 
-                <div class="pagination">
+                        <div class="history-meta">
+                            <span class="history-meta-chip">{{ item.search_date|date:"M d, Y" }}</span>
+                            <span class="history-meta-chip">{{ item.search_date|time:"H:i" }}</span>
+                            <span class="history-meta-chip">{{ item.search_date|timesince }} ago</span>
+                            {% if item.latitude and item.longitude %}
+                            <span class="history-meta-chip">Lat {{ item.latitude|floatformat:2 }}, Lon {{ item.longitude|floatformat:2 }}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="history-entry-actions">
+                        <a href="{% url 'weather:home' %}?city={{ item.city_name|urlencode }}" class="btn btn-primary history-action">
+                            Search Again
+                        </a>
+                    </div>
+                </article>
+                {% endfor %}
+
+                <nav class="pagination history-pagination" aria-label="Search history pages">
                     {% if page_obj.has_previous %}
                         <a href="?page={{ page_obj.previous_page_number }}">Previous</a>
+                    {% else %}
+                        <span class="pagination-disabled">Previous</span>
                     {% endif %}
+
                     <span>Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+
                     {% if page_obj.has_next %}
                         <a href="?page={{ page_obj.next_page_number }}">Next</a>
+                    {% else %}
+                        <span class="pagination-disabled">Next</span>
                     {% endif %}
-                </div>
+                </nav>
             </div>
         </div>
     {% else %}
         <div class="card">
-            <div class="card-body">
-                <p>No searches yet.</p>
+            <div class="card-body empty-state-block">
+                <h2>No searches yet</h2>
+                <p>Your recent weather lookups will appear here once you search for a city or use your current location.</p>
+                <a href="{% url 'weather:home' %}" class="btn btn-primary">Start Searching</a>
             </div>
         </div>
     {% endif %}

@@ -21,6 +21,7 @@ web_patterns = [
     path('settings/', views.user_settings, name='settings'),
     path('history/', views.search_history, name='search_history'),
     path('favorites/', views.favorite_cities, name='favorite_cities'),
+    path('favorites/<int:favorite_id>/remove/', views.remove_favorite, name='remove_favorite'),
     
     # Static pages
     path('about/', TemplateView.as_view(template_name='weather/about.html'), name='about'),

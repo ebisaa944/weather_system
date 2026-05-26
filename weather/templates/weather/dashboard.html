@@ -5,113 +5,10 @@
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'weather/css/dashboard.css' %}">
-<style>
-    /* Fallback styles in case dashboard.css fails to load */
-    .dashboard-container {
-        max-width: 1200px;
-        margin: 0 auto;
-        padding: 2rem;
-    }
-    .welcome-section {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        padding: 2rem;
-        border-radius: 10px;
-        margin-bottom: 2rem;
-    }
-    .dashboard-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-        gap: 1.5rem;
-        margin-bottom: 2rem;
-    }
-    .dashboard-card {
-        background: white;
-        border-radius: 10px;
-        padding: 1.5rem;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-    }
-    .card-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 1rem;
-        padding-bottom: 0.5rem;
-        border-bottom: 1px solid #eee;
-    }
-    .card-title {
-        font-size: 1.2rem;
-        margin: 0;
-    }
-    .card-link {
-        color: #667eea;
-        text-decoration: none;
-        font-size: 0.9rem;
-    }
-    .empty-state {
-        text-align: center;
-        padding: 2rem;
-        color: #999;
-    }
-    .btn {
-        display: inline-block;
-        padding: 0.5rem 1rem;
-        border-radius: 5px;
-        text-decoration: none;
-    }
-    .btn-primary {
-        background: #667eea;
-        color: white;
-    }
-    .favorite-item, .search-item {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 0.75rem 0;
-        border-bottom: 1px solid #eee;
-    }
-    .favorite-item:last-child, .search-item:last-child {
-        border-bottom: none;
-    }
-    .stat-item {
-        text-align: center;
-    }
-    .stat-value {
-        font-size: 1.5rem;
-        font-weight: bold;
-        display: block;
-    }
-    .stat-label {
-        font-size: 0.9rem;
-        color: rgba(255,255,255,0.9);
-    }
-    .welcome-stats {
-        display: flex;
-        justify-content: space-around;
-        margin-top: 1rem;
-    }
-    .chart-container {
-        height: 300px;
-        margin-top: 1rem;
-    }
-    .loading-spinner-small {
-        width: 30px;
-        height: 30px;
-        border: 3px solid #f3f3f3;
-        border-top: 3px solid #667eea;
-        border-radius: 50%;
-        animation: spin 1s linear infinite;
-        margin: 1rem auto;
-    }
-    @keyframes spin {
-        0% { transform: rotate(0deg); }
-        100% { transform: rotate(360deg); }
-    }
-</style>
 {% endblock %}
 
 {% block content %}
-<div class="dashboard-container">
+<div class="dashboard-container" {% if settings.auto_refresh %}data-auto-refresh="true" data-refresh-interval="{{ settings.refresh_interval }}"{% endif %}>
     <!-- Welcome Section -->
     <div class="welcome-section">
         <div class="welcome-content">
@@ -162,8 +59,9 @@
                             {% endif %}
                         </div>
                         <div class="favorite-weather">
+                            <img class="favorite-icon" src="" alt="" style="display: none;">
                             <span class="favorite-temp">--°C</span>
-                            <button class="favorite-refresh" data-city="{{ favorite.city_name }}" aria-label="Refresh" style="background: none; border: none; cursor: pointer; margin-left: 0.5rem;">
+                            <button class="favorite-refresh" data-city="{{ favorite.city_name }}" aria-label="Refresh" type="button">
                                 🔄
                             </button>
                         </div>
@@ -194,11 +92,11 @@
                     <div class="search-item" data-city="{{ search.city_name }}">
                         <div class="search-info">
                             <span class="search-city">{{ search.city_name }}</span>
-                            <span class="search-time" style="font-size: 0.8rem; color: #999; margin-left: 0.5rem;">
+                            <span class="search-time">
                                 {{ search.search_date|timesince }} ago
                             </span>
                         </div>
-                        <button class="search-again" data-city="{{ search.city_name }}" style="background: #667eea; color: white; border: none; border-radius: 3px; padding: 0.25rem 0.5rem; cursor: pointer; font-size: 0.8rem;">
+                        <button class="search-again" data-city="{{ search.city_name }}" type="button">
                             Search
                         </button>
                     </div>
@@ -238,25 +136,25 @@
             </div>
             
             <div class="settings-preview">
-                <div class="setting-item" style="display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid #eee;">
+                <div class="setting-item">
                     <span class="setting-label">Temperature Unit</span>
                     <span class="setting-value">
                         {% if settings.temperature_unit == 'celsius' %}°C{% else %}°F{% endif %}
                     </span>
                 </div>
-                <div class="setting-item" style="display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid #eee;">
+                <div class="setting-item">
                     <span class="setting-label">Wind Speed Unit</span>
                     <span class="setting-value">
                         {% if settings.wind_speed_unit == 'metric' %}m/s{% else %}mph{% endif %}
                     </span>
                 </div>
-                <div class="setting-item" style="display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid #eee;">
+                <div class="setting-item">
                     <span class="setting-label">Time Format</span>
                     <span class="setting-value">
                         {% if settings.time_format == '12h' %}12-hour{% else %}24-hour{% endif %}
                     </span>
                 </div>
-                <div class="setting-item" style="display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid #eee;">
+                <div class="setting-item">
                     <span class="setting-label">Theme</span>
                     <span class="setting-value">
                         {% if settings.theme == 'dark' %}Dark{% elif settings.theme == 'light' %}Light{% else %}Auto{% endif %}
@@ -281,14 +179,14 @@
                 <span class="card-icon">📊</span>
                 Temperature Trends
             </h2>
-            <div class="chart-controls" style="display: flex; gap: 0.5rem;">
-                <select id="chart-city" class="chart-select" style="padding: 0.25rem; border: 1px solid #ddd; border-radius: 3px;">
+            <div class="chart-controls">
+                <select id="chart-city" class="chart-select">
                     <option value="">Select a city...</option>
                     {% for favorite in favorites %}
                     <option value="{{ favorite.city_name }}">{{ favorite.city_name }}</option>
                     {% endfor %}
                 </select>
-                <select id="chart-days" class="chart-select" style="padding: 0.25rem; border: 1px solid #ddd; border-radius: 3px;">
+                <select id="chart-days" class="chart-select">
                     <option value="7">7 days</option>
                     <option value="14">14 days</option>
                     <option value="30">30 days</option>
@@ -308,10 +206,8 @@
 {% endblock %}
 
 {% block page_js %}
-<!-- Load Chart.js from CDN with fallback -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-    // Check if Chart.js loaded
     window.addEventListener('load', function() {
         if (typeof Chart === 'undefined') {
             document.getElementById('chart-fallback').style.display = 'block';
@@ -319,152 +215,5 @@
         }
     });
 </script>
-
-<!-- Dashboard JavaScript -->
-<script>
-    // Simple dashboard functionality without external dependencies
-    document.addEventListener('DOMContentLoaded', function() {
-        console.log('Dashboard loaded');
-        
-        // Load favorite cities weather (mock data for now)
-        function loadFavoriteCitiesWeather() {
-            const favoriteItems = document.querySelectorAll('.favorite-item');
-            
-            favoriteItems.forEach(item => {
-                const city = item.dataset.city;
-                const tempSpan = item.querySelector('.favorite-temp');
-                
-                // Mock data - in production, this would fetch from API
-                if (tempSpan) {
-                    // Simulate API call with random temperature
-                    setTimeout(() => {
-                        const mockTemp = Math.floor(Math.random() * 35) + 5;
-                        tempSpan.textContent = mockTemp + '°C';
-                    }, 500);
-                }
-            });
-        }
-        
-        // Load alerts preview (mock data)
-        function loadAlertsPreview() {
-            const alertsPreview = document.getElementById('alerts-preview');
-            
-            if (alertsPreview) {
-                // Simulate API call
-                setTimeout(() => {
-                    const hasAlerts = Math.random() > 0.5;
-                    
-                    if (hasAlerts) {
-                        alertsPreview.innerHTML = `
-                            <div style="background: #fff3cd; color: #856404; padding: 0.75rem; border-radius: 5px; margin-bottom: 0.5rem;">
-                                <strong>⚠️ Heavy Rain Warning</strong>
-                                <p style="margin: 0.25rem 0 0; font-size: 0.9rem;">Expected in your area</p>
-                            </div>
-                        `;
-                    } else {
-                        alertsPreview.innerHTML = '<p style="color: #999; text-align: center;">No active alerts</p>';
-                    }
-                }, 800);
-            }
-        }
-        
-        // Initialize chart (mock)
-        function initWeatherChart() {
-            const chartCanvas = document.getElementById('weather-chart');
-            const citySelect = document.getElementById('chart-city');
-            const daysSelect = document.getElementById('chart-days');
-            
-            if (!chartCanvas || typeof Chart === 'undefined') return;
-            
-            // Mock chart data
-            const ctx = chartCanvas.getContext('2d');
-            
-            // Generate mock temperature data
-            const labels = [];
-            const data = [];
-            
-            for (let i = 6; i >= 0; i--) {
-                const date = new Date();
-                date.setDate(date.getDate() - i);
-                labels.push(date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }));
-                data.push(Math.floor(Math.random() * 15) + 15); // Random temp between 15-30
-            }
-            
-            new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        label: 'Temperature (°C)',
-                        data: data,
-                        borderColor: '#667eea',
-                        backgroundColor: 'rgba(102, 126, 234, 0.1)',
-                        tension: 0.4
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            display: false
-                        }
-                    }
-                }
-            });
-            
-            // Handle city selection change
-            if (citySelect) {
-                citySelect.addEventListener('change', function() {
-                    console.log('Selected city:', this.value);
-                    // In production, fetch real data here
-                });
-            }
-            
-            // Handle days selection change
-            if (daysSelect) {
-                daysSelect.addEventListener('change', function() {
-                    console.log('Selected days:', this.value);
-                    // In production, fetch real data here
-                });
-            }
-        }
-        
-        // Handle search again buttons
-        document.querySelectorAll('.search-again').forEach(btn => {
-            btn.addEventListener('click', function() {
-                const city = this.dataset.city;
-                if (city) {
-                    window.location.href = '/?city=' + encodeURIComponent(city);
-                }
-            });
-        });
-        
-        // Handle refresh buttons
-        document.querySelectorAll('.favorite-refresh').forEach(btn => {
-            btn.addEventListener('click', function() {
-                const city = this.dataset.city;
-                const item = this.closest('.favorite-item');
-                const tempSpan = item.querySelector('.favorite-temp');
-                
-                if (tempSpan) {
-                    tempSpan.textContent = '...';
-                    // Simulate refresh
-                    setTimeout(() => {
-                        const mockTemp = Math.floor(Math.random() * 35) + 5;
-                        tempSpan.textContent = mockTemp + '°C';
-                    }, 500);
-                }
-            });
-        });
-        
-        // Initialize all functions
-        loadFavoriteCitiesWeather();
-        loadAlertsPreview();
-        initWeatherChart();
-    });
-</script>
-
-<!-- Optional: Load dashboard.js if available -->
-<script src="{% static 'weather/js/dashboard.js' %}" onerror="console.log('dashboard.js not loaded, using inline fallback')"></script>
+<script src="{% static 'weather/js/dashboard.js' %}"></script>
 {% endblock %}

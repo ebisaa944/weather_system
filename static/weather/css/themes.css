@@ -2,10 +2,10 @@
 
 :root {
     /* Light Theme (Default) */
-    --light-primary: #667eea;
-    --light-primary-dark: #5a67d8;
-    --light-primary-light: #9f7aea;
-    --light-secondary: #48bb78;
+    --light-primary: #0f766e;
+    --light-primary-dark: #115e59;
+    --light-primary-light: #38bdf8;
+    --light-secondary: #14b8a6;
     --light-danger: #f56565;
     --light-warning: #ecc94b;
     --light-info: #4299e1;
@@ -25,10 +25,10 @@
     --light-shadow-lg: 0 20px 40px rgba(0, 0, 0, 0.15);
     
     /* Dark Theme */
-    --dark-primary: #9f7aea;
-    --dark-primary-dark: #b794f4;
-    --dark-primary-light: #d6bcfa;
-    --dark-secondary: #68d391;
+    --dark-primary: #38bdf8;
+    --dark-primary-dark: #7dd3fc;
+    --dark-primary-light: #a5f3fc;
+    --dark-secondary: #2dd4bf;
     --dark-danger: #fc8181;
     --dark-warning: #faf089;
     --dark-info: #63b3ed;

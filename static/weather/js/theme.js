@@ -93,9 +93,9 @@ class ThemeManager {
     updateThemeColor(theme) {
         let color;
         if (theme === 'light' || (theme === 'auto' && window.matchMedia('(prefers-color-scheme: light)').matches)) {
-            color = '#667eea';
+            color = '#0f766e';
         } else {
-            color = '#1a202c';
+            color = '#07131c';
         }
         
         let metaTheme = document.querySelector('meta[name="theme-color"]');

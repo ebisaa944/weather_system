@@ -56,9 +56,4 @@ class WeatherMiddleware:
     
     def process_template_response(self, request, response):
         """Called when a response has a .render() method"""
-        # Add additional context to template responses
-        if hasattr(response, 'context_data'):
-            response.context_data['current_year'] = timezone.now().year
-            response.context_data['temperature_unit'] = getattr(request, 'temperature_unit', 'celsius')
-            response.context_data['theme'] = getattr(request, 'theme', 'auto')
         return response

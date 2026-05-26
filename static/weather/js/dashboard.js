@@ -10,6 +10,8 @@ class DashboardManager {
         this.loadAlertsPreview();
         this.initCharts();
         this.initRefreshTimers();
+        this.initRefreshButtons();
+        this.initSearchButtons();
     }
     
     async loadFavoriteCitiesWeather() {
@@ -26,16 +28,18 @@ class DashboardManager {
     
     async updateFavoriteWeather(item, city) {
         try {
-            const response = await fetch(`/api/v1/weather/current/?city=${encodeURIComponent(city)}`);
+            const response = await fetch(`/api/v2/weather/current/?city=${encodeURIComponent(city)}`);
             const data = await response.json();
             
             if (data.success) {
                 const tempSpan = item.querySelector('.favorite-temp');
                 const iconImg = item.querySelector('.favorite-icon');
                 
-                tempSpan.textContent = `${Math.round(data.data.temperature)}°C`;
+                if (tempSpan) {
+                    tempSpan.textContent = `${Math.round(data.data.temperature)}°C`;
+                }
                 
-                if (data.data.icon) {
+                if (iconImg && data.data.icon) {
                     iconImg.src = `https://openweathermap.org/img/wn/${data.data.icon}.png`;
                     iconImg.style.display = 'inline';
                     iconImg.alt = data.data.description;
@@ -64,7 +68,7 @@ class DashboardManager {
             let alertsHtml = '';
             
             for (const city of cities) {
-                const response = await fetch(`/api/v1/weather/alerts/?city=${encodeURIComponent(city)}`);
+                const response = await fetch(`/api/v2/weather/alerts/?city=${encodeURIComponent(city)}`);
                 const data = await response.json();
                 
                 if (data.success && data.data.length > 0) {
@@ -119,7 +123,7 @@ class DashboardManager {
         const days = daysSelect ? daysSelect.value : 7;
         
         try {
-            const response = await fetch(`/api/v1/weather/historical/?city=${encodeURIComponent(city)}&days=${days}`);
+            const response = await fetch(`/api/v2/weather/historical/?city=${encodeURIComponent(city)}&days=${days}`);
             const data = await response.json();
             
             if (data.success) {
@@ -131,6 +135,9 @@ class DashboardManager {
     }
     
     renderChart(canvas, data) {
+        if (typeof Chart === 'undefined' || !canvas) {
+            return;
+        }
         if (this.chart) {
             this.chart.destroy();
         }
@@ -213,6 +220,17 @@ class DashboardManager {
                 const city = btn.dataset.city;
                 const item = btn.closest('.favorite-item');
                 this.updateFavoriteWeather(item, city);
+            });
+        });
+    }
+
+    initSearchButtons() {
+        document.querySelectorAll('.search-again').forEach((btn) => {
+            btn.addEventListener('click', () => {
+                const city = btn.dataset.city;
+                if (city) {
+                    window.location.href = `/?city=${encodeURIComponent(city)}`;
+                }
             });
         });
     }

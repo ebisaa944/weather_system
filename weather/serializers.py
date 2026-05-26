@@ -2,7 +2,7 @@ from rest_framework import serializers
 from django.contrib.auth.models import User
 from .models import (
     SearchHistory, FavoriteCity, WeatherAlert, 
-    UserSettings, WeatherCache
+    UserSettings, WeatherCache, Notification
 )
 import json
 
@@ -127,3 +127,36 @@ class WeatherStatisticsSerializer(serializers.Serializer):
     
     class Meta:
         fields = '__all__'
+
+
+class MobileUserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['id', 'username', 'email', 'first_name', 'last_name']
+
+
+class MobileFavoriteSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = FavoriteCity
+        fields = ['id', 'city_name', 'country', 'latitude', 'longitude', 'is_active']
+
+
+class MobileNotificationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Notification
+        fields = ['id', 'notification_type', 'title', 'message', 'data', 'is_read', 'created_at']
+
+
+class MobileWeatherSerializer(serializers.Serializer):
+    city = serializers.CharField(required=False, allow_blank=True)
+    country = serializers.CharField(required=False, allow_blank=True)
+    temperature = serializers.FloatField(required=False)
+    feels_like = serializers.FloatField(required=False)
+    humidity = serializers.IntegerField(required=False)
+    pressure = serializers.IntegerField(required=False)
+    description = serializers.CharField(required=False, allow_blank=True)
+    icon = serializers.CharField(required=False, allow_blank=True)
+    wind_speed = serializers.FloatField(required=False)
+    wind_direction = serializers.IntegerField(required=False, allow_null=True)
+    coordinates = serializers.DictField(required=False)
+    uv_index = serializers.FloatField(required=False, allow_null=True)

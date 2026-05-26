@@ -1,14 +1,14 @@
-const CACHE_NAME = 'weather-app-v1';
+const CACHE_NAME = 'weather-app-v2';
 const urlsToCache = [
     '/',
     '/static/weather/css/style.css',
     '/static/weather/css/themes.css',
     '/static/weather/css/dashboard.css',
     '/static/weather/js/main.js',
+    '/static/weather/js/map.js',
     '/static/weather/js/theme.js',
     '/static/weather/js/dashboard.js',
-    '/static/weather/js/charts.js',
-    'https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap'
+    '/static/weather/js/charts.js'
 ];
 
 // Install service worker
@@ -91,7 +91,7 @@ async function syncWeatherData() {
     
     // Find and update weather data
     for (const request of keys) {
-        if (request.url.includes('/api/weather/')) {
+        if (request.url.includes('/api/v2/weather/')) {
             try {
                 const response = await fetch(request);
                 if (response.ok) {

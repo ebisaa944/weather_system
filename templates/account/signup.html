@@ -1,0 +1,85 @@
+{% extends "weather/base.html" %}
+{% load i18n static %}
+
+{% block title %}{% trans "Create Account" %} - SkyCast{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'weather/css/auth.css' %}">
+{% endblock %}
+
+{% block content %}
+<section class="auth-shell auth-shell-signup">
+    <div class="auth-showcase">
+        <div class="auth-kicker">{% trans "Create your space" %}</div>
+        <h1>{% trans "Build a weather dashboard that feels personal from day one." %}</h1>
+        <p class="auth-intro">
+            {% trans "Create an account to save your favorite places, track searches, tune alerts, and keep the interface consistent across light and dark modes." %}
+        </p>
+
+        <div class="auth-metrics">
+            <div class="auth-metric-card">
+                <strong>{% trans "Saved Cities" %}</strong>
+                <span>{% trans "Keep your go-to locations one tap away." %}</span>
+            </div>
+            <div class="auth-metric-card">
+                <strong>{% trans "Alerts" %}</strong>
+                <span>{% trans "Stay ahead of conditions that need attention." %}</span>
+            </div>
+            <div class="auth-metric-card">
+                <strong>{% trans "Theme Sync" %}</strong>
+                <span>{% trans "Get readable, polished screens in both viewing preferences." %}</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="auth-panel glass-effect">
+        <div class="auth-panel-header">
+            <p class="auth-eyebrow">{% trans "Join SkyCast" %}</p>
+            <h2>{% trans "Create Account" %}</h2>
+            <p class="auth-panel-copy">
+                {% url 'account_login' as account_login_url %}
+                {% blocktrans %}Already have an account? <a href="{{ account_login_url }}">Sign in</a> instead.{% endblocktrans %}
+            </p>
+        </div>
+
+        <form method="post" action="{% url 'account_signup' %}" class="auth-form" novalidate>
+            {% csrf_token %}
+
+            {% if form.non_field_errors %}
+            <div class="auth-form-errors">
+                {% for error in form.non_field_errors %}
+                <p>{{ error }}</p>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            {% for hidden in form.hidden_fields %}
+                {{ hidden }}
+            {% endfor %}
+
+            {% for field in form.visible_fields %}
+            <div class="auth-field {% if field.errors %}has-error{% endif %}">
+                <label for="{{ field.id_for_label }}" class="auth-label">
+                    {{ field.label }}
+                </label>
+                {{ field }}
+                {% if field.help_text %}
+                <small class="auth-help">{{ field.help_text|safe }}</small>
+                {% endif %}
+                {% for error in field.errors %}
+                <small class="auth-error">{{ error }}</small>
+                {% endfor %}
+            </div>
+            {% endfor %}
+
+            {% if redirect_field_value %}
+            <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}">
+            {% endif %}
+
+            <div class="auth-actions">
+                <button type="submit" class="btn btn-primary auth-submit">{% trans "Create Account" %}</button>
+            </div>
+        </form>
+    </div>
+</section>
+{% endblock %}

@@ -2,13 +2,29 @@ from functools import wraps
 from django.http import JsonResponse
 from django.core.cache import cache
 from django.conf import settings
-from django.utils import timezone
 from .models import APILog
 import time
 import hashlib
 import logging
+import json
 
 logger = logging.getLogger(__name__)
+
+
+def _get_request_user(request):
+    """Safely read the authenticated user from a request-like object."""
+    user = getattr(request, 'user', None)
+    if user is not None and getattr(user, 'is_authenticated', False):
+        return user
+    return None
+
+
+def _response_json_data(response):
+    """Extract JSON payload from a JsonResponse for caching."""
+    try:
+        return json.loads(response.content.decode('utf-8'))
+    except Exception:
+        return None
 
 def api_response_time(view_func):
     """Decorator to measure API response time"""
@@ -22,11 +38,12 @@ def api_response_time(view_func):
         
         # Log API call
         try:
+            user = _get_request_user(request)
             APILog.objects.create(
                 endpoint=request.path,
                 method=request.method,
-                user=request.user if request.user.is_authenticated else None,
-                ip_address=request.META.get('REMOTE_ADDR'),
+                user=user,
+                ip_address=request.META.get('REMOTE_ADDR') or '127.0.0.1',
                 response_time=response_time,
                 status_code=response.status_code
             )
@@ -45,8 +62,9 @@ def cache_response(timeout=300):
         @wraps(view_func)
         def wrapper(request, *args, **kwargs):
             # Generate cache key based on request
+            user = _get_request_user(request)
             cache_key = hashlib.md5(
-                f"{request.path}_{request.GET.urlencode()}_{request.user.id if request.user.is_authenticated else 'anon'}"
+                f"{request.path}_{request.GET.urlencode()}_{user.id if user else 'anon'}"
                 .encode()
             ).hexdigest()
             
@@ -63,8 +81,10 @@ def cache_response(timeout=300):
             # Cache if successful
             if response.status_code == 200:
                 try:
-                    cache.set(cache_key, response.json(), timeout)
-                except:
+                    payload = _response_json_data(response)
+                    if payload is not None:
+                        cache.set(cache_key, payload, timeout)
+                except Exception:
                     pass
             
             response['X-Cache'] = 'MISS'
@@ -79,11 +99,11 @@ def rate_limit(key='ip', rate='100/h'):
         def wrapper(request, *args, **kwargs):
             # Get rate limit key
             if key == 'ip':
-                limit_key = request.META.get('REMOTE_ADDR')
-            elif key == 'user' and request.user.is_authenticated:
+                limit_key = request.META.get('REMOTE_ADDR') or '127.0.0.1'
+            elif key == 'user' and _get_request_user(request):
                 limit_key = f"user_{request.user.id}"
             else:
-                limit_key = request.META.get('REMOTE_ADDR')
+                limit_key = request.META.get('REMOTE_ADDR') or '127.0.0.1'
             
             # Parse rate (e.g., '100/h' -> 100, 3600)
             try:
@@ -130,7 +150,8 @@ def require_api_key(view_func):
             }, status=401)
         
         # Validate API key (implement your validation logic)
-        if api_key != settings.API_KEY and api_key != settings.WEATHER_API_KEY:
+        configured_api_key = getattr(settings, 'API_KEY', None)
+        if api_key != configured_api_key and api_key != settings.WEATHER_API_KEY:
             return JsonResponse({
                 'error': 'Invalid API key'
             }, status=403)
@@ -144,9 +165,10 @@ def log_activity(view_func):
     def wrapper(request, *args, **kwargs):
         response = view_func(request, *args, **kwargs)
         
-        if request.user.is_authenticated:
+        user = _get_request_user(request)
+        if user:
             logger.info(
-                f"User {request.user.username} accessed {request.path} "
+                f"User {user.username} accessed {request.path} "
                 f"[{request.method}] - {response.status_code}"
             )
         

@@ -84,8 +84,8 @@ class WeatherAlert(models.Model):
     
     city_name = models.CharField(max_length=100)
     country = models.CharField(max_length=100)
-    latitude = models.FloatField()
-    longitude = models.FloatField()
+    latitude = models.FloatField(default=0.0)
+    longitude = models.FloatField(default=0.0)
     alert_type = models.CharField(max_length=20, choices=ALERT_TYPES)
     severity = models.CharField(max_length=10, choices=SEVERITY_LEVELS)
     title = models.CharField(max_length=200)
@@ -199,3 +199,114 @@ class APILog(models.Model):
             models.Index(fields=['-timestamp']),
             models.Index(fields=['endpoint', 'status_code']),
         ]
+
+class UserProfile(models.Model):
+    """Extended user profile"""
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
+    
+    # Personal info
+    bio = models.TextField(max_length=500, blank=True)
+    location = models.CharField(max_length=100, blank=True)
+    phone_number = models.CharField(max_length=30, blank=True)
+    birth_date = models.DateField(null=True, blank=True)
+    profile_picture = models.ImageField(upload_to='profiles/', null=True, blank=True)
+    
+    # Weather preferences
+    default_location = models.CharField(max_length=100, blank=True)
+    home_city = models.CharField(max_length=100, blank=True)
+    work_city = models.CharField(max_length=100, blank=True)
+    
+    # Notification preferences
+    notification_email = models.BooleanField(default=True)
+    notification_sms = models.BooleanField(default=False)
+    notification_push = models.BooleanField(default=False)
+    fcm_token = models.TextField(blank=True)
+    device_type = models.CharField(max_length=20, blank=True)
+    
+    # Alert thresholds
+    alert_threshold_temp_high = models.FloatField(default=35)
+    alert_threshold_temp_low = models.FloatField(default=0)
+    alert_threshold_wind = models.FloatField(default=50)
+    alert_threshold_rain = models.FloatField(default=20)
+    alert_threshold_snow = models.FloatField(default=10)
+    alert_threshold_aqi = models.IntegerField(default=150)
+    alert_threshold_uv = models.IntegerField(default=8)
+    
+    # Social features
+    share_weather = models.BooleanField(default=False)
+    public_profile = models.BooleanField(default=False)
+    
+    # Stats
+    total_searches = models.IntegerField(default=0)
+    weather_checks = models.IntegerField(default=0)
+    alerts_received = models.IntegerField(default=0)
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    def __str__(self):
+        return f"{self.user.username}'s Profile"
+        
+    def increment_searches(self):
+        self.total_searches += 1
+        self.save()
+        
+    def increment_checks(self):
+        self.weather_checks += 1
+        self.save()
+
+class UserActivity(models.Model):
+    """Track user activity"""
+    ACTIVITY_TYPES = [
+        ('search', 'Search'),
+        ('view', 'View'),
+        ('share', 'Share'),
+        ('alert', 'Alert Received'),
+        ('favorite_add', 'Add Favorite'),
+        ('favorite_remove', 'Remove Favorite')
+    ]
+    
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    activity_type = models.CharField(max_length=20, choices=ACTIVITY_TYPES)
+    city_name = models.CharField(max_length=100, blank=True)
+    description = models.CharField(max_length=255, blank=True)
+    ip_address = models.GenericIPAddressField(null=True, blank=True)
+    user_agent = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        ordering = ['-created_at']
+        
+    def __str__(self):
+        return f"{self.user.username} - {self.activity_type} - {self.created_at}"
+
+class Notification(models.Model):
+    """User notifications"""
+    NOTIFICATION_TYPES = [
+        ('alert', 'Weather Alert'),
+        ('forecast', 'Daily Forecast'),
+        ('system', 'System Update'),
+        ('tip', 'Weather Tip')
+    ]
+    
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    notification_type = models.CharField(max_length=20, choices=NOTIFICATION_TYPES)
+    title = models.CharField(max_length=200)
+    message = models.TextField()
+    data = models.JSONField(default=dict)
+    is_read = models.BooleanField(default=False)
+    is_sent = models.BooleanField(default=False)
+    sent_at = models.DateTimeField(null=True, blank=True)
+    read_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        ordering = ['-created_at']
+        
+    def __str__(self):
+        return f"{self.user.username} - {self.title}"
+        
+    def mark_as_read(self):
+        self.is_read = True
+        self.read_at = timezone.now()
+        self.save()

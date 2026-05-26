@@ -195,7 +195,10 @@ class DataFormatter:
     def format_visibility(visibility: float) -> str:
         """Format visibility"""
         if visibility > 1000:
-            return f"{round(visibility/1000, 1)} km"
+            distance_km = round(visibility / 1000, 1)
+            if float(distance_km).is_integer():
+                return f"{int(distance_km)} km"
+            return f"{distance_km} km"
         return f"{round(visibility)} m"
     
     @staticmethod

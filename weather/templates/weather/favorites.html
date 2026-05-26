@@ -1,9 +1,14 @@
 {% extends "weather/base.html" %}
+{% load static %}
 
 {% block title %}Favorite Cities - Weather System{% endblock %}
 
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'weather/css/dashboard.css' %}">
+{% endblock %}
+
 {% block content %}
-<section class="page">
+<section class="page page-narrow">
     <header class="page-header">
         <h1>Favorite Cities</h1>
         <p>Saved locations for quick access.</p>
@@ -29,6 +34,10 @@
                     {% for fav in favorites %}
                         <li>
                             <span>{{ fav.city_name }}</span>
+                            <form method="post" action="{% url 'weather:remove_favorite' fav.id %}">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-outline">Remove</button>
+                            </form>
                         </li>
                     {% endfor %}
                 </ul>

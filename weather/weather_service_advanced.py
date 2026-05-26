@@ -42,6 +42,26 @@ class AdvancedWeatherService:
         if not self._has_valid_api_keys():
             logger.warning("No valid API keys found. Running in mock mode.")
             self._mock_mode = True
+
+    def _run_async(self, coro):
+        """Run an async coroutine from synchronous Django views."""
+        try:
+            loop = asyncio.get_event_loop()
+        except RuntimeError:
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+
+        if loop.is_running():
+            return asyncio.run(coro)
+        return loop.run_until_complete(coro)
+
+    def __del__(self):
+        """Best-effort cleanup for aiohttp sessions."""
+        if getattr(self, 'session', None) and not self.session.closed:
+            try:
+                self._run_async(self.close_session())
+            except Exception:
+                pass
     
     def _get_api_config(self) -> Dict:
         """Get API configuration from settings or environment variables"""
@@ -168,6 +188,11 @@ class AdvancedWeatherService:
         self.cache_manager.set(cache_key, aggregated, 600)
         
         return aggregated
+
+    def get_current_weather_sync(self, city: str) -> Dict[str, Any]:
+        """Sync wrapper for current weather endpoint."""
+        data = self._run_async(self.fetch_weather_multiple_sources(city))
+        return {'success': True, 'data': data}
     
     async def _fetch_openweather(self, city: str, config: Dict) -> Dict:
         """Fetch from OpenWeatherMap API"""
@@ -492,21 +517,24 @@ class AdvancedWeatherService:
             return {}
         
         # Collect all values for averaging
-        temp_values = [r['temperature'] for r in results.values()]
-        humidity_values = [r['humidity'] for r in results.values()]
-        pressure_values = [r['pressure'] for r in results.values()]
-        wind_speed_values = [r['wind_speed'] for r in results.values()]
+        temp_values = [r['temperature'] for r in results.values() if r.get('temperature') is not None]
+        humidity_values = [r['humidity'] for r in results.values() if r.get('humidity') is not None]
+        pressure_values = [r['pressure'] for r in results.values() if r.get('pressure') is not None]
+        wind_speed_values = [r['wind_speed'] for r in results.values() if r.get('wind_speed') is not None]
+
+        if not temp_values:
+            return self._get_mock_weather_data(primary.get('city', 'Unknown'))
         
         aggregated = {
             'city': primary.get('city', 'Unknown'),
             'country': primary.get('country', ''),
             'temperature': round(sum(temp_values) / len(temp_values), 1),
             'feels_like': primary.get('feels_like', primary['temperature']),
-            'humidity': round(sum(humidity_values) / len(humidity_values)),
-            'pressure': round(sum(pressure_values) / len(pressure_values)),
-            'description': primary['description'],
-            'icon': primary['icon'],
-            'wind_speed': round(sum(wind_speed_values) / len(wind_speed_values), 1),
+            'humidity': round(sum(humidity_values) / len(humidity_values)) if humidity_values else primary.get('humidity', 0),
+            'pressure': round(sum(pressure_values) / len(pressure_values)) if pressure_values else primary.get('pressure', 1013),
+            'description': primary.get('description', 'Unknown'),
+            'icon': primary.get('icon', '03d'),
+            'wind_speed': round(sum(wind_speed_values) / len(wind_speed_values), 1) if wind_speed_values else primary.get('wind_speed', 0),
             'wind_direction': primary.get('wind_direction'),
             'wind_gust': primary.get('wind_gust'),
             'clouds': primary.get('clouds', 0),
@@ -640,6 +668,10 @@ class AdvancedWeatherService:
         except Exception as e:
             logger.error(f"Forecast fetch error: {e}")
             return self._get_mock_forecast(city, days)
+
+    def get_forecast_sync(self, city: str, days: int = 5) -> Dict[str, Any]:
+        """Sync wrapper for forecast endpoint."""
+        return {'success': True, 'data': self._run_async(self.get_forecast(city, days))}
     
     def _parse_forecast(self, data: Dict, days: int) -> Dict:
         """Parse forecast data"""
@@ -763,6 +795,10 @@ class AdvancedWeatherService:
         except Exception as e:
             logger.error(f"Air quality fetch error: {e}")
             return self._get_mock_air_quality()
+
+    def get_air_quality_sync(self, lat: float, lon: float) -> Dict[str, Any]:
+        """Sync wrapper for air quality endpoint."""
+        return {'success': True, 'data': self._run_async(self.get_air_quality(lat, lon))}
     
     def _parse_air_quality(self, data: Dict) -> Dict:
         """Parse air quality data"""
@@ -868,6 +904,10 @@ class AdvancedWeatherService:
             logger.error(f"Historical data error: {e}")
         
         return self._get_mock_historical_data(city, days)
+
+    def get_historical_data_sync(self, city: str, days: int = 7) -> Dict[str, Any]:
+        """Sync wrapper for historical endpoint."""
+        return {'success': True, 'data': self._run_async(self.get_historical_data(city, days))}
     
     def _get_mock_historical_data(self, city: str, days: int) -> Dict:
         """Generate mock historical data"""
@@ -976,6 +1016,52 @@ class AdvancedWeatherService:
         self.cache_manager.set(cache_key, alerts, 900)
         
         return alerts
+
+    def get_weather_alerts_sync(self, city: str) -> Dict[str, Any]:
+        """Sync wrapper for alerts endpoint."""
+        return {'success': True, 'data': self._run_async(self.get_weather_alerts(city))}
+
+    def search_cities_sync(self, query: str) -> Dict[str, Any]:
+        """Sync wrapper for city search."""
+        return {'success': True, 'data': self._run_async(self._search_cities(query))}
+
+    def geocode_location_sync(self, location: str) -> Dict[str, Any]:
+        """Sync wrapper for geocoding."""
+        coords = self._run_async(self._geocode_city(location))
+        if not coords:
+            return {'success': False, 'error': 'Location not found'}
+        lat, lon = coords
+        return {
+            'success': True,
+            'data': {
+                'location': location,
+                'lat': lat,
+                'lon': lon,
+            }
+        }
+
+    def reverse_geocode_sync(self, lat: float, lon: float) -> Dict[str, Any]:
+        """Sync wrapper for reverse geocoding."""
+        location = self._run_async(self._reverse_geocode(lat, lon))
+        if not location:
+            return {'success': False, 'error': 'Location not found'}
+        return {
+            'success': True,
+            'data': {
+                'lat': lat,
+                'lon': lon,
+                'location': location,
+            }
+        }
+
+    def get_weather_by_coords_sync(self, lat: float, lon: float) -> Dict[str, Any]:
+        """Resolve coordinates to a city and fetch weather for it."""
+        location = self._run_async(self._reverse_geocode(lat, lon))
+        if not location:
+            data = self._get_mock_weather_data('Current location')
+            data['coordinates'] = {'lat': lat, 'lon': lon}
+            return {'success': True, 'data': data}
+        return self.get_current_weather_sync(location)
     
     def _get_mock_alerts(self) -> List[Dict]:
         """Generate mock weather alerts"""

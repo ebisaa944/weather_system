@@ -1,0 +1,85 @@
+{% extends "weather/base.html" %}
+{% load i18n static %}
+
+{% block title %}{% trans "Sign In" %} - SkyCast{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'weather/css/auth.css' %}">
+{% endblock %}
+
+{% block content %}
+<section class="auth-shell auth-shell-login">
+    <div class="auth-showcase">
+        <div class="auth-kicker">{% trans "Welcome back" %}</div>
+        <h1>{% trans "Sign in to keep your weather workflow in sync." %}</h1>
+        <p class="auth-intro">
+            {% trans "Pick up where you left off with saved cities, search history, alerts, and your preferred theme." %}
+        </p>
+
+        <div class="auth-feature-list">
+            <article class="auth-feature-card">
+                <span class="auth-feature-title">{% trans "Faster daily checks" %}</span>
+                <p>{% trans "Open straight into your recent cities, favorites, and the forecast details you use most." %}</p>
+            </article>
+            <article class="auth-feature-card">
+                <span class="auth-feature-title">{% trans "Cleaner planning" %}</span>
+                <p>{% trans "Keep alerts, air quality, and map exploration organized in one consistent dashboard." %}</p>
+            </article>
+            <article class="auth-feature-card">
+                <span class="auth-feature-title">{% trans "Your preferences stay with you" %}</span>
+                <p>{% trans "Theme, saved places, and activity history stay aligned across the experience." %}</p>
+            </article>
+        </div>
+    </div>
+
+    <div class="auth-panel glass-effect">
+        <div class="auth-panel-header">
+            <p class="auth-eyebrow">{% trans "Account access" %}</p>
+            <h2>{% trans "Sign In" %}</h2>
+            <p class="auth-panel-copy">
+                {% blocktrans %}New here? <a href="{{ signup_url }}">Create an account</a> to save cities and personalize SkyCast.{% endblocktrans %}
+            </p>
+        </div>
+
+        <form method="post" action="{% url 'account_login' %}" class="auth-form" novalidate>
+            {% csrf_token %}
+
+            {% if form.non_field_errors %}
+            <div class="auth-form-errors">
+                {% for error in form.non_field_errors %}
+                <p>{{ error }}</p>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            {% for hidden in form.hidden_fields %}
+                {{ hidden }}
+            {% endfor %}
+
+            {% for field in form.visible_fields %}
+            <div class="auth-field {% if field.errors %}has-error{% endif %}">
+                <label for="{{ field.id_for_label }}" class="auth-label">
+                    {{ field.label }}
+                </label>
+                {{ field }}
+                {% if field.help_text %}
+                <small class="auth-help">{{ field.help_text|safe }}</small>
+                {% endif %}
+                {% for error in field.errors %}
+                <small class="auth-error">{{ error }}</small>
+                {% endfor %}
+            </div>
+            {% endfor %}
+
+            {% if redirect_field_value %}
+            <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}">
+            {% endif %}
+
+            <div class="auth-actions">
+                <button type="submit" class="btn btn-primary auth-submit">{% trans "Sign In" %}</button>
+                <a href="{% url 'account_reset_password' %}" class="auth-inline-link">{% trans "Forgot your password?" %}</a>
+            </div>
+        </form>
+    </div>
+</section>
+{% endblock %}
