@@ -1,0 +1,54 @@
+{% extends "weather/base.html" %}
+{% load i18n static %}
+
+{% block title %}{% trans "Sign Out" %} - SkyCast{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'weather/css/auth.css' %}">
+{% endblock %}
+
+{% block content %}
+<section class="auth-shell auth-shell-logout">
+    <div class="auth-showcase">
+        <div class="auth-kicker">{% trans "Session control" %}</div>
+        <h1>{% trans "You're one step away from signing out safely." %}</h1>
+        <p class="auth-intro">
+            {% trans "Sign out when you're done to protect your saved cities, account preferences, alert settings, and personal dashboard activity." %}
+        </p>
+
+        <div class="auth-feature-list">
+            <article class="auth-feature-card">
+                <span class="auth-feature-title">{% trans "Protected access" %}</span>
+                <p>{% trans "Signing out helps keep your personal settings and weather activity private on shared devices." %}</p>
+            </article>
+            <article class="auth-feature-card">
+                <span class="auth-feature-title">{% trans "Fast return" %}</span>
+                <p>{% trans "You can sign back in anytime to continue with favorites, alerts, and recent search history." %}</p>
+            </article>
+        </div>
+    </div>
+
+    <div class="auth-panel glass-effect auth-panel-compact">
+        <div class="auth-panel-header">
+            <p class="auth-eyebrow">{% trans "Confirm action" %}</p>
+            <h2>{% trans "Sign Out" %}</h2>
+            <p class="auth-panel-copy">
+                {% trans "Are you sure you want to end your current session?" %}
+            </p>
+        </div>
+
+        <form method="post" action="{% url 'account_logout' %}" class="auth-form auth-form-compact">
+            {% csrf_token %}
+
+            {% if redirect_field_value %}
+            <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}">
+            {% endif %}
+
+            <div class="auth-actions">
+                <button type="submit" class="btn btn-primary auth-submit">{% trans "Yes, Sign Out" %}</button>
+                <a href="{% url 'weather:home' %}" class="btn btn-outline auth-submit auth-secondary-action">{% trans "Stay Signed In" %}</a>
+            </div>
+        </form>
+    </div>
+</section>
+{% endblock %}

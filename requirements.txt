@@ -31,10 +31,6 @@ django-celery-results==2.5.1
 # Asset compression
 django-compressor==4.4
 
-# Data processing (optional)
-pandas==2.1.4
-numpy==1.26.2
-
 # Geocoding
 geopy==2.4.1
 

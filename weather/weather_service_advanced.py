@@ -14,8 +14,6 @@ import hashlib
 import random
 from geopy.geocoders import Nominatim
 from geopy.exc import GeocoderTimedOut
-import pandas as pd
-import numpy as np
 from collections import Counter
 import time
 import os

@@ -101,6 +101,11 @@
     align-self: center;
 }
 
+.auth-panel-compact {
+    max-width: 32rem;
+    justify-self: end;
+}
+
 .auth-form {
     display: grid;
     gap: 1rem;
@@ -189,11 +194,21 @@
 
 .auth-submit {
     width: 100%;
+    display: inline-flex;
     justify-content: center;
+    align-items: center;
     padding: 0.95rem 1.2rem;
     border-radius: 18px;
     font-weight: 800;
     font-size: 0.98rem;
+}
+
+.auth-secondary-action {
+    min-height: 3.4rem;
+}
+
+.auth-form-compact {
+    margin-top: 1rem;
 }
 
 .auth-field label[for$="remember"],
@@ -208,7 +223,8 @@
 }
 
 .auth-shell-login .auth-showcase::after,
-.auth-shell-signup .auth-showcase::after {
+.auth-shell-signup .auth-showcase::after,
+.auth-shell-logout .auth-showcase::after {
     content: "";
     position: absolute;
     inset: auto -3.5rem -4rem auto;
@@ -226,6 +242,11 @@
 
     .auth-showcase h1 {
         max-width: 18ch;
+    }
+
+    .auth-panel-compact {
+        max-width: none;
+        justify-self: stretch;
     }
 }
 
