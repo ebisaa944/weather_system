@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 
 import os
 import sys
+import importlib
 from pathlib import Path
 from dotenv import load_dotenv
 import environ
@@ -71,12 +72,15 @@ INSTALLED_APPS = [
     'allauth',
     'allauth.account',
     'allauth.socialaccount',
-    'drf_yasg',
     'axes',
     'django_celery_beat',
     'django_celery_results',
     'compressor',
 ]
+
+HAS_DRF_YASG = importlib.util.find_spec('drf_yasg') is not None
+if HAS_DRF_YASG:
+    INSTALLED_APPS.append('drf_yasg')
 
 MIDDLEWARE = [
    'django.middleware.security.SecurityMiddleware',

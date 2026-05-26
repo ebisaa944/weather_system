@@ -8,26 +8,33 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.http import JsonResponse, HttpResponse
 from django.views.generic import TemplateView
-from drf_yasg.views import get_schema_view
-from drf_yasg import openapi
 from rest_framework import permissions
 from axes.decorators import axes_dispatch
 from weather import urls as weather_urls
 
-# API Schema View for Swagger documentation
-schema_view = get_schema_view(
-    openapi.Info(
-        title="Weather System API",
-        default_version='v2.0',
-        description="Enterprise-Grade Weather Data API with Multiple Sources",
-        terms_of_service="https://www.weathersystem.com/terms/",
-        contact=openapi.Contact(email="api@weathersystem.com"),
-        license=openapi.License(name="BSD License"),
-    ),
-    public=True,
-    permission_classes=[permissions.AllowAny],
-    authentication_classes=[],
-)
+try:
+    from drf_yasg.views import get_schema_view
+    from drf_yasg import openapi
+    HAS_SWAGGER = True
+except Exception:
+    get_schema_view = None
+    openapi = None
+    HAS_SWAGGER = False
+
+if HAS_SWAGGER:
+    schema_view = get_schema_view(
+        openapi.Info(
+            title="Weather System API",
+            default_version='v2.0',
+            description="Enterprise-Grade Weather Data API with Multiple Sources",
+            terms_of_service="https://www.weathersystem.com/terms/",
+            contact=openapi.Contact(email="api@weathersystem.com"),
+            license=openapi.License(name="BSD License"),
+        ),
+        public=True,
+        permission_classes=[permissions.AllowAny],
+        authentication_classes=[],
+    )
 
 def health_check(request):
     """Enhanced health check endpoint for monitoring"""
@@ -90,7 +97,7 @@ def api_root(request):
     return JsonResponse({
         'name': 'Weather System API',
         'version': '2.0',
-        'documentation': request.build_absolute_uri('/api/docs/'),
+        'documentation': request.build_absolute_uri('/api/docs/') if HAS_SWAGGER else None,
         'endpoints': {
             'weather': {
                 'current': f'{base_url}weather/current/?city={{city_name}}',
@@ -183,15 +190,17 @@ urlpatterns = [
     # API v1 endpoints (backward compatibility)
     path('api/v1/', include((weather_urls.api_v2_patterns, 'weather'), namespace='api_v1')),
     
-    # API Documentation
-    path('api/docs/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
-    path('api/redoc/', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
-    path('api/json/', schema_view.without_ui(cache_timeout=0), name='schema-json'),
-    
     # Authentication
     path('accounts/', include('allauth.urls')),
     
 ]
+
+if HAS_SWAGGER:
+    urlpatterns += [
+        path('api/docs/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
+        path('api/redoc/', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
+        path('api/json/', schema_view.without_ui(cache_timeout=0), name='schema-json'),
+    ]
 
 # Serve static and media files in development
 if settings.DEBUG:
